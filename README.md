@@ -9,6 +9,6 @@ In this code, I use UDN2981A for 27 LED drivers instead of 74HC595 because of th
 
 All of the LEDs are not display with similar brightness, thus, you should calculate the needed current and suitable resistors for them to get the same brightness.
 
-For time setting, I use 3 buttons for increasing hour, minutes. You can modify the code to make it works as you want. There is a variable named setPM in main.c which determines the display type. You should set it to 0 if you want to show 24h time format.
+For time setting, I use 3 buttons for increasing hour, minute. You can modify the code to make it works as you want. There is a variable named setPM in main.c which determines the display type. You should set it to 0 if you want to show 24h time format.
 
 This is a short demostration for my clock: https://youtu.be/NBCf8XFfK70
