@@ -14,4 +14,4 @@ For time setting, I use 3 buttons for increasing hour, minute. You can modify th
 This is a short demostration for my clock: https://youtu.be/NBCf8XFfK70
 
 And this is what the DIY PCB looks like
-![](Images/DIYPCB.jpg)
+![](hienvuvg/TixClock/blob/master/Images/DIYPCB.jpg)
