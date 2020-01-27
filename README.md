@@ -1,5 +1,5 @@
 # TixClock
-This is the code for a DIY tix clock on STM32 BluePill using HAL library in KeilC or IAR for ARM.
+This is the code for a DIY tix clock with STM32 BluePill using HAL library in KeilC or IAR for ARM.
 
 I have two folders here for STM32F103C8T6 and STM32F334C8 which have the same footprint and can all be used in STM32 BluePill PCB. My folders only contain the source code and you can generate the whole programming files by running the ".ioc" files on STm32CubeMX.
 
