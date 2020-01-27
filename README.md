@@ -12,6 +12,3 @@ All of the LEDs are not display with similar brightness, thus, you should calcul
 For time setting, I use 3 buttons for increasing hour, minute. You can modify the code to make it works as you want. There is a variable named setPM in main.c which determines the display type. You should set it to 0 if you want to show 24h time format.
 
 This is a short demostration for my clock: https://youtu.be/NBCf8XFfK70
-
-And this is what the DIY PCB looks like
-![](hienvuvg/TixClock/blob/master/Images/DIYPCB.jpg)
