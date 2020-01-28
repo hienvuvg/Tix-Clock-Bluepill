@@ -59,14 +59,15 @@ RTC_HandleTypeDef hrtc;
 RTC_TimeTypeDef currTime = {0};
 RTC_DateTypeDef currDate = {0};
 
-char M1 = 0, M2 = 0, H1 = 0, H2 = 0;
-int testRan = 0;
-bool temp[9], displayTime = 0;
+uint8_t M1 = 0, M2 = 0, H1 = 0, H2 = 0;
+int lastSecond = 0;
+bool temp[9], displayTime = 1, setPM = 1;
+uint32_t errorSecond = 0;
+uint8_t  IWDG_Reset = 1;
 
 
-RTC_TimeTypeDef setTime = {1,1,1}; // Hour, Minute, Second
+RTC_TimeTypeDef setTime = {17,31,30};//{0,0,0}; // Hour, Minute, Second
 RTC_DateTypeDef setDate = {6,01,25,20}; // WeekDay, Month, Day, Year
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,10 +82,14 @@ static void MX_RTC_Init(void);
 
 /* USER CODE BEGIN 0 */
 void    DisplayTime(void);
+void    DisplaySetTime(void);
 int     GeneratePosition(int value, int N_position);
 void    ShowPoints(char matrix_location, int position);
 int     CountingOne(int data, int N_Position);
 void    interruptDisplayTime(void);
+void    DisplayAll(void);
+void    getTime(void);
+
 
 /* USER CODE END 0 */
 
@@ -120,8 +125,10 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
-  //HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
+  HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
   //HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
+    DisplayAll();
+    HAL_Delay(1000);
   
   /* USER CODE END 2 */
 
@@ -133,60 +140,55 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
     
-    setTime.Hours = currTime.Hours;
-    setTime.Minutes = currTime.Minutes;
-    setTime.Seconds = currTime.Seconds;
-    
-    //**************************
+    // **************************
     if ( ReadPin(IH1_GPIO_Port,IH1_Pin) == 0){
       while( ReadPin(IH1_GPIO_Port,IH1_Pin) == 0);
+      getTime();
       if (setTime.Hours < 23)
         setTime.Hours++;
       else
         setTime.Hours = 0;
       
-      setTime.Seconds = 0;
+      setTime.Seconds           = 0;
       
       HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
       HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
-      DisplayTime();
+      DisplaySetTime();
+      
     }
     
-    //**************************
+    // **************************
     if ( ReadPin(IM1_GPIO_Port,IM1_Pin) == 0){
       while( ReadPin(IM1_GPIO_Port,IM1_Pin) == 0);
+      getTime();
       if (setTime.Minutes%10 != 9)
         setTime.Minutes++;
       else
         setTime.Minutes = setTime.Minutes - 9;
       
-      setTime.Seconds = 0;
+      setTime.Seconds           = 0;
       
       HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
       HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
-      DisplayTime();
+      DisplaySetTime();
     }
     
-    //**************************
+    // **************************
     if ( ReadPin(IM2_GPIO_Port,IM2_Pin) == 0){
       while( ReadPin(IM2_GPIO_Port,IM2_Pin) == 0);
+      getTime();
       if (setTime.Minutes < 49)
         setTime.Minutes = setTime.Minutes + 10;
       else
         setTime.Minutes = setTime.Minutes - 50;
       
-      setTime.Seconds = 0;
+      setTime.Seconds           = 0;
       
       HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
       HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
-      DisplayTime();
+      DisplaySetTime();
     }
-    //**************************
-    displayTime = 1;
-    //HAL_Delay(100);
       
   }
   /* USER CODE END 3 */
@@ -260,8 +262,6 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
-  RTC_TamperTypeDef sTamper;
-
   /* USER CODE BEGIN RTC_Init 1 */
 
   /* USER CODE END RTC_Init 1 */
@@ -270,17 +270,8 @@ static void MX_RTC_Init(void)
     */
   hrtc.Instance = RTC;
   hrtc.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
-  hrtc.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
+  hrtc.Init.OutPut = RTC_OUTPUTSOURCE_SECOND;
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-    /**Enable the RTC Tamper 
-    */
-  sTamper.Tamper = RTC_TAMPER_1;
-  sTamper.Trigger = RTC_TAMPERTRIGGER_LOWLEVEL;
-  if (HAL_RTCEx_SetTamper(&hrtc, &sTamper) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -326,7 +317,7 @@ static void MX_GPIO_Init(void)
                           |M1_7_Pin|M1_6_Pin|M1_5_Pin|M1_4_Pin 
                           |M1_3_Pin|M1_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -339,12 +330,12 @@ static void MX_GPIO_Init(void)
                           |M2_5_Pin|M2_4_Pin|M2_3_Pin|M2_2_Pin 
                           |M2_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : IH1_Pin IM1_Pin IM2_Pin */
-  GPIO_InitStruct.Pin = IH1_Pin|IM1_Pin|IM2_Pin;
+  /*Configure GPIO pins : IM1_Pin IH1_Pin IM2_Pin */
+  GPIO_InitStruct.Pin = IM1_Pin|IH1_Pin|IM2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -352,7 +343,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 /*
 M1 x9: M1.1 M1.2 M1.3 ...
 M2 x6: M2.1 M2.2 ...
@@ -360,16 +350,75 @@ H1 x9: H1.1 H2.2 ...
 H2 x3: H2.1 H2.2 H2.3
 */
 
+void getTime(void){
+    
+    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+    //
+    setTime.Hours       = currTime.Hours;
+    setTime.Minutes     = currTime.Minutes;
+    setTime.Seconds     = currTime.Seconds;
+    
+    
+}
 void interruptDisplayTime(void){
+  lastSecond = currTime.Seconds;
+  getTime();
+  
+  if (currTime.Seconds == lastSecond + 1) {
+    //HAL_GPIO_TogglePin(Tix_GPIO_Port,Tix_Pin);
+    //SetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_RESET); 
+    //HAL_Delay(100);
+    //SetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_SET);
+  }
+  else if ( currTime.Seconds != 0 ) errorSecond++;
+  /*
+  if (currTime.Minutes == 0 && currTime.Seconds == 0) {
+    SetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_SET); 
+    HAL_Delay(300);
+    ResetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_RESET);
+  }
+  */
   if(displayTime == 1) DisplayTime();
 }
 
 void DisplayTime(void){
   int position = 0;
   
+  if (setPM == 1){
+    if ( currTime.Hours > 12 ) currTime.Hours = currTime.Hours - 12;
+    if ( currTime.Hours == 0 ) currTime.Hours = 12;
+  }
+  
+  M1 = currTime.Minutes%10;
+  position = GeneratePosition(M1,9);
+  ShowPoints(1,position);
+  
+  M2 = currTime.Minutes/10;
+  position = GeneratePosition(M2,6);
+  ShowPoints(2,position);
+  
+  H1 = currTime.Hours%10;
+  position = GeneratePosition(H1,9);
+  ShowPoints(3,position);
+  
+  H2 = currTime.Hours/10;
+  position = GeneratePosition(H2,3);
+  ShowPoints(4,position);
+  
+}
+
+void DisplaySetTime(void){
+  int position = 0;
+  
+  if (setPM == 1){
+    if ( setTime.Hours > 12 ) setTime.Hours = setTime.Hours - 12;
+    if ( setTime.Hours == 0 ) setTime.Hours = 12;
+  }
+  
   M1 = setTime.Minutes%10;
   position = GeneratePosition(M1,9);
-  ShowPoints(1,testRan);
+  ShowPoints(1,position);
   
   M2 = setTime.Minutes/10;
   position = GeneratePosition(M2,6);
@@ -383,6 +432,13 @@ void DisplayTime(void){
   position = GeneratePosition(H2,3);
   ShowPoints(4,position);
   
+}
+
+void DisplayAll(void){
+  ShowPoints(1,0x1FF);
+  ShowPoints(2,0x3F);
+  ShowPoints(3,0x1FF);
+  ShowPoints(4,0x07);
 }
 
 int GeneratePosition(int value, int N_Position){
@@ -495,7 +551,6 @@ void ShowPoints(char matrix_location, int position){
   default: break;
   }
 }
-
 /* USER CODE END 4 */
 
 /**

@@ -36,11 +36,14 @@
 #include "stm32f1xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern void interruptDisplayTime(void);
+//extern          IWDG_HandleTypeDef hiwdg;
+extern void     interruptDisplayTime(void);
+extern uint8_t  IWDG_Reset;
+
+uint32_t time_ms;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern RTC_HandleTypeDef hrtc;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -65,11 +68,12 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+  
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
     /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    
     /* USER CODE END W1_HardFault_IRQn 0 */
   }
   /* USER CODE BEGIN HardFault_IRQn 1 */
@@ -181,7 +185,15 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+    time_ms++;  // Increases every 1ms
+    //HAL_IWDG_Refresh(&hiwdg);
+    IWDG_Reset = 0;
 
+    if (time_ms > 999){
+        time_ms = 0;
+        interruptDisplayTime();
+    }
+   
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -191,20 +203,6 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
-
-/**
-* @brief This function handles RTC global interrupt.
-*/
-void RTC_IRQHandler(void)
-{
-  /* USER CODE BEGIN RTC_IRQn 0 */
-
-  /* USER CODE END RTC_IRQn 0 */
-  HAL_RTCEx_RTCIRQHandler(&hrtc);
-  /* USER CODE BEGIN RTC_IRQn 1 */
-    interruptDisplayTime();
-  /* USER CODE END RTC_IRQn 1 */
-}
 
 /* USER CODE BEGIN 1 */
 
