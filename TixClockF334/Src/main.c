@@ -69,7 +69,7 @@ uint32_t errorSecond = 0;
 uint8_t  IWDG_Reset = 1;
 
 
-RTC_TimeTypeDef setTime = {6,5,5,RTC_HOURFORMAT12_AM,0,0,RTC_DAYLIGHTSAVING_NONE,RTC_STOREOPERATION_RESET}; // Hour, Minute, Second
+RTC_TimeTypeDef setTime = {0,0,0,RTC_HOURFORMAT_24,0,0,RTC_DAYLIGHTSAVING_NONE,RTC_STOREOPERATION_RESET}; // Hour, Minute, Second
 RTC_DateTypeDef setDate = {6,01,25,20}; // WeekDay, Month, Day, Year
 /* USER CODE END PV */
 
@@ -198,10 +198,6 @@ int main(void)
       HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
       DisplaySetTime();
     }
-    // **************************
-    
-    //
-    // HAL_Delay(100);
       
   }
   /* USER CODE END 3 */
