@@ -1,6 +1,6 @@
 Configuration	TixClockF334
 STM32CubeMX 	4.27.0
-Date	01/26/2020
+Date	01/28/2020
 MCU	STM32F334C8Tx
 
 
@@ -11,7 +11,6 @@ RCC	Crystal/Ceramic Resonator	RCC_OSC_OUT	PF1 / OSC_OUT
 RCC	Crystal/Ceramic Resonator	RCC_OSC32_IN	PC14 / OSC32_IN
 RCC	Crystal/Ceramic Resonator	RCC_OSC32_OUT	PC15 / OSC32_OUT
 RTC	Activate RTC Clock Source	RTC_VS_RTC_Activate	VP_RTC_VS_RTC_Activate
-RTC	RTC Enabled	RTC_VS_RTC_Calendar	VP_RTC_VS_RTC_Calendar
 SYS	Serial Wire	SYS_JTCK-SWCLK	PA14
 SYS	Serial Wire	SYS_JTMS-SWDIO	PA13
 SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
@@ -19,6 +18,7 @@ SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
 
 
 Pin Nb	PINs	FUNCTIONs	LABELs
+2	PC13	GPIO_Output	Tix
 3	PC14 / OSC32_IN	RCC_OSC32_IN	
 4	PC15 / OSC32_OUT	RCC_OSC32_OUT	
 5	PF0 / OSC_IN	RCC_OSC_IN	
@@ -62,7 +62,7 @@ SOFTWARE PROJECT
 
 Project Settings : 
 Project Name : TixClockF334
-Project Folder : C:\Users\EC Lab\Desktop\TixClock\TixClockF334
+Project Folder : C:\Users\EC Lab\Desktop\2020.01.TixClock\2020.01.TixClock\TixClock\TixClockF334
 Toolchain / IDE : EWARM V7
 Firmware Package Name and Version : STM32Cube FW_F3 V1.10.0
 

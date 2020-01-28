@@ -53,9 +53,9 @@ H2 x3: H2.1 H2.2 H2.3
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-RTC_HandleTypeDef hrtc;
+IWDG_HandleTypeDef hiwdg;
 
-WWDG_HandleTypeDef hwwdg;
+RTC_HandleTypeDef hrtc;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -64,8 +64,9 @@ RTC_DateTypeDef currDate = {0};
 
 uint8_t M1 = 0, M2 = 0, H1 = 0, H2 = 0;
 int lastSecond = 0;
-bool temp[9], displayTime = 0, setPM = 1;
+bool temp[9], displayTime = 1, setPM = 1;
 uint32_t errorSecond = 0;
+uint8_t  IWDG_Reset = 1;
 
 
 RTC_TimeTypeDef setTime = {6,5,5,RTC_HOURFORMAT12_AM,0,0,RTC_DAYLIGHTSAVING_NONE,RTC_STOREOPERATION_RESET}; // Hour, Minute, Second
@@ -75,8 +76,8 @@ RTC_DateTypeDef setDate = {6,01,25,20}; // WeekDay, Month, Day, Year
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_WWDG_Init(void);
 static void MX_RTC_Init(void);
+static void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -123,8 +124,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_WWDG_Init();
   MX_RTC_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   //HAL_RTC_SetTime(&hrtc, &setTime, RTC_FORMAT_BIN);
   //HAL_RTC_SetDate(&hrtc, &setDate, RTC_FORMAT_BIN);
@@ -197,7 +198,6 @@ int main(void)
       DisplaySetTime();
     }
     // **************************
-    displayTime = 1;
     
     //
     // HAL_Delay(100);
@@ -226,11 +226,13 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
+                              |RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -272,6 +274,21 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 1, 0);
 }
 
+/* IWDG init function */
+static void MX_IWDG_Init(void)
+{
+
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_16;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* RTC init function */
 static void MX_RTC_Init(void)
 {
@@ -294,22 +311,6 @@ static void MX_RTC_Init(void)
   hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* WWDG init function */
-static void MX_WWDG_Init(void)
-{
-
-  hwwdg.Instance = WWDG;
-  hwwdg.Init.Prescaler = WWDG_PRESCALER_4;
-  hwwdg.Init.Window = 127;
-  hwwdg.Init.Counter = 127;
-  hwwdg.Init.EWIMode = WWDG_EWI_DISABLE;
-  if (HAL_WWDG_Init(&hwwdg) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -354,7 +355,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : Tix_Pin */
   GPIO_InitStruct.Pin = Tix_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Tix_GPIO_Port, &GPIO_InitStruct);
 
@@ -415,7 +416,12 @@ void interruptDisplayTime(void){
   lastSecond = currTime.Seconds;
   getTime();
   
-  if (currTime.Seconds == lastSecond + 1) HAL_GPIO_TogglePin(Tix_GPIO_Port,Tix_Pin);
+  if (currTime.Seconds == lastSecond + 1) {
+    HAL_GPIO_TogglePin(Tix_GPIO_Port,Tix_Pin);
+    //SetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_RESET); 
+    //HAL_Delay(100);
+    //SetPin(Tix_GPIO_Port, Tix_Pin, GPIO_PIN_SET);
+  }
   else if ( currTime.Seconds != 0 ) errorSecond++;
   /*
   if (currTime.Minutes == 0 && currTime.Seconds == 0) {

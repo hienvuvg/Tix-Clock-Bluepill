@@ -36,8 +36,9 @@
 #include "stm32f3xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern          WWDG_HandleTypeDef hwwdg;
+extern          IWDG_HandleTypeDef hiwdg;
 extern void     interruptDisplayTime(void);
+extern uint8_t  IWDG_Reset;
 
 uint32_t time_ms;
 /* USER CODE END 0 */
@@ -184,7 +185,8 @@ void SysTick_Handler(void)
   HAL_SYSTICK_IRQHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
     time_ms++;  // Increases every 1ms
-    HAL_WWDG_Refresh(&hwwdg);
+    HAL_IWDG_Refresh(&hiwdg);
+    IWDG_Reset = 0;
 
     if (time_ms > 999){
         time_ms = 0;
