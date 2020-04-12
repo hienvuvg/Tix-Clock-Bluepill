@@ -2,7 +2,7 @@
 
 This is the code for a DIY tix clock with STM32 BluePill using HAL library in KeilC or IAR for ARM.
 
-I have two folders here for STM32F103C8T6 and STM32F334C8 which have the same footprint and can all be used in STM32 BluePill PCB. My folders only contain the source code and you can generate the whole programming files by running the ".ioc" files on STm32CubeMX. All of the peripheral setups can be found in TixClockF334.pdf or the ".ioc" files.
+I have two folders here for STM32F103C8T6 and STM32F334C8 which have the same footprint and can all be used in STM32 BluePill PCB. My folders only contain the source code and you can generate the whole programming files by running the ".ioc" files on STm32CubeMX. All of the peripheral setups can be found in TixClockF334.pdf or the ".ioc" files. All of the numbers are displayed randomly in a restricted number of points and thus it follows no given rules. The position of bright points change every second, therefore, you need to change the code when you want it to be faster or slower.
 
 In this design, I use UDN2981A for 27 LED drivers instead of 74HC595 because of the availability. If you want to switch to 74HC595, you need to modify the code and that can save your IC a lot of pins. Otherwise, you can find several alternatives for UDN2981A or make the drivers yourself by using BJTs. 
 
